@@ -6,21 +6,27 @@
     <link rel="shortcut icon" href="/static/favicon.ico">
 
     <script>
-      // TODO: it's 2019, use fetch()
       function send(cb) {
           // console.log('sending id=' + cb.id + ' checked=' + cb.checked);
-          var http = new XMLHttpRequest();
-          var url = '/admin/edit_user';
-          var params = 'user_id=' + cb.id + '&is_active=' + cb.checked;
-          http.open('POST', url, true);
-          http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-          http.onreadystatechange = function() {
-              if (http.readyState == 4 && http.status == 201) {
-                  console.debug(http.responseText);
-                  update_result(JSON.parse(http.responseText)['detail']);
+          try {
+              const res = await fetch('/admin/edit_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'user_id=' + cb.id + '&is_active=' + cb.checked,
+              });
+              if (!res.ok) {
+                throw new Error("Network error");
               }
+              if (res.status == 201) {
+                  const res_text = await res.text();
+                  console.debug(res_text);
+                  update_result(JSON.parse(res_text)['detail']);
+              }
+          } catch (error) {
+              console.error('send operation: ' + error);
           }
-          http.send(params);
       }
 
       function update_result(content) {
